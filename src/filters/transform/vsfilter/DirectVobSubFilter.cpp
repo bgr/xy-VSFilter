@@ -1711,6 +1711,7 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
 				pVSS->SetAlignment(m_xy_bool_opt[BOOL_OVERRIDE_PLACEMENT], m_xy_size_opt[SIZE_PLACEMENT_PERC].cx, m_xy_size_opt[SIZE_PLACEMENT_PERC].cy, 1, 1);
 				pVSS->m_fOnlyShowForcedSubs = m_xy_bool_opt[BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS];
 			}
+			pVSS->m_opacity = min(max(m_xy_int_opt[INT_VOBSUBSETTINGS_OPACITY], 0), 100);
 		}
 		else if(clsid == __uuidof(CVobSubStream))
 		{
@@ -1721,6 +1722,7 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
 				pVSS->SetAlignment(m_xy_bool_opt[BOOL_OVERRIDE_PLACEMENT], m_xy_size_opt[SIZE_PLACEMENT_PERC].cx, m_xy_size_opt[SIZE_PLACEMENT_PERC].cy, 1, 1);
 				pVSS->m_fOnlyShowForcedSubs = m_xy_bool_opt[BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS];
 			}
+			pVSS->m_opacity = min(max(m_xy_int_opt[INT_VOBSUBSETTINGS_OPACITY], 0), 100);
 		}
 		else if(clsid == __uuidof(CRenderedTextSubtitle))
 		{
@@ -2496,6 +2498,7 @@ STDMETHODIMP CDirectVobSubFilter::XySetInt( unsigned field, int value )
         SubpixelPositionControler::GetGlobalControler().SetSubpixelLevel( static_cast<SubpixelPositionControler::SUBPIXEL_LEVEL>(m_xy_int_opt[field]) );
         break;
     case DirectVobSubXyOptions::INT_SELECTED_LANGUAGE:
+    case DirectVobSubXyOptions::INT_VOBSUBSETTINGS_OPACITY:
         UpdateSubtitle(false);
         break;
     default:

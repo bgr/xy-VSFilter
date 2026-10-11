@@ -243,6 +243,7 @@
 #define IDC_COLORSHAD                   1066
 #define IDS_RG_ALLOWMOVING              1070
 #define IDC_CHECKBOX_ALLOW_MOVING       1071
+#define IDS_RV_OPACITY                  1072
 
 // Next default values for new objects
 // 

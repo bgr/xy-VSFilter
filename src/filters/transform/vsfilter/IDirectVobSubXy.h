@@ -147,6 +147,8 @@ namespace DirectVobSubXyOptions
 
         BOOL_ALLOW_MOVING,
 
+        INT_VOBSUBSETTINGS_OPACITY,// in 1%
+
         OPTION_COUNT
     };
     struct ColorSpaceOpt
@@ -299,6 +301,7 @@ namespace DirectVobSubXyOptions
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_ENABLE_ZP_ICON},
         {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_READ, INT_CUR_STYLES_COUNT},
         {XyOptionsImpl::OPTION_TYPE_BIN2  , XyOptionsImpl::OPTION_MODE_RW, BIN2_CUR_STYLES},
+        {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_VOBSUBSETTINGS_OPACITY},
 
         {XyOptionsImpl::OPTION_TYPE_END_FLAG}
     };

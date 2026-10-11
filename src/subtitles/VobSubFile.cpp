@@ -1491,7 +1491,7 @@ static void PixelAtBiLinear(RGBQUAD& c, int x, int y, CVobSubImage& src)
                           + v2u1 + v2u2) >> 16);
 }
 
-static void StretchBlt(SubPicDesc& spd, CRect dstrect, CVobSubImage& src)
+static void StretchBlt(SubPicDesc& spd, CRect dstrect, CVobSubImage& src, int opacity)
 {
     if (dstrect.IsRectEmpty()) {
         return;
@@ -1551,6 +1551,7 @@ static void StretchBlt(SubPicDesc& spd, CRect dstrect, CVobSubImage& src)
             ptr->rgbGreen = (cc[0].rgbGreen + cc[1].rgbGreen + cc[2].rgbGreen + cc[3].rgbGreen) >> 2;
             ptr->rgbBlue = (cc[0].rgbBlue + cc[1].rgbBlue + cc[2].rgbBlue + cc[3].rgbBlue) >> 2;
             ptr->rgbReserved = (cc[0].rgbReserved + cc[1].rgbReserved + cc[2].rgbReserved + cc[3].rgbReserved) >> 2;
+            ptr->rgbReserved = BYTE(ptr->rgbReserved * opacity / 100);
             ////
             ptr->rgbRed = ptr->rgbRed * ptr->rgbReserved >> 8;
             ptr->rgbGreen = ptr->rgbGreen * ptr->rgbReserved >> 8;
@@ -1580,6 +1581,7 @@ void CVobSubSettings::InitSettings()
     m_tridx = 0;
     ZeroMemory(m_orgpal, sizeof(m_orgpal));
     ZeroMemory(m_cuspal, sizeof(m_cuspal));
+    m_opacity = 100;
 }
 
 bool CVobSubSettings::GetCustomPal(RGBQUAD* cuspal, int& tridx)
@@ -1680,7 +1682,7 @@ HRESULT CVobSubSettings::Render(SubPicDesc& spd, RECT& bbox)
 {
     CRect r;
     GetDestrect(r, spd.w, spd.h);
-    StretchBlt(spd, r, m_img);
+    StretchBlt(spd, r, m_img, m_opacity);
     /*
         CRenderedTextSubtitle rts(nullptr);
         rts.CreateDefaultStyle(DEFAULT_CHARSET);

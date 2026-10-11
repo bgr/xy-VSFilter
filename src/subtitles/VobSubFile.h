@@ -63,6 +63,7 @@ public:
     bool m_fCustomPal;
     int m_tridx;
     RGBQUAD m_orgpal[16], m_cuspal[4];
+    int m_opacity;              // %, set by the filter, not stored in the idx
 
     CVobSubImage m_img;
 
