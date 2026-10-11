@@ -1552,6 +1552,53 @@ void CDirectVobSubFilter2::GetRidOfInternalScriptRenderer()
 	}
 }
 
+HRESULT CDirectVobSubFilter2::CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePin)
+{
+    HRESULT hr = __super::CompleteConnect(dir, pReceivePin);
+    if(SUCCEEDED(hr) && dir == PINDIR_INPUT)
+        ConnectFreeSplitterVobSubPins();
+    return hr;
+}
+
+// Players with a built-in subtitle renderer may leave the splitter's subtitle pins unconnected.
+// Only free pins are taken, a pin the player already uses stays with the player.
+// Only VobSub pins are taken, the player renders the other formats with its own style.
+void CDirectVobSubFilter2::ConnectFreeSplitterVobSubPins()
+{
+    CComPtr<IBaseFilter> pBF;
+    for (size_t i = 0, n = m_known_source_filters_guid.GetCount(); i < n && !pBF; i++)
+    {
+        pBF = FindFilter(m_known_source_filters_guid[i], m_pGraph);
+    }
+
+    BeginEnumPins(pBF, pEP, pPin)
+    {
+        PIN_DIRECTION dir;
+        CComPtr<IPin> pPinTo;
+        if(FAILED(pPin->QueryDirection(&dir)) || dir != PINDIR_OUTPUT
+        || SUCCEEDED(pPin->ConnectedTo(&pPinTo)))
+            continue;
+
+        bool fVobSub = false;
+        BeginEnumMediaTypes(pPin, pEM, pmt)
+        {
+            if(pmt->majortype == MEDIATYPE_Subtitle && pmt->subtype == MEDIASUBTYPE_VOBSUB)
+            {
+                fVobSub = true;
+                break;
+            }
+        }
+        EndEnumMediaTypes(pmt)
+
+        if(fVobSub)
+        {
+            HRESULT hr = m_pGraph->ConnectDirect(pPin, GetPin(2 + m_pTextInput.GetCount()-1), NULL);
+            XY_LOG_INFO("Connecting free splitter VobSub pin "<<XY_LOG_VAR_2_STR(hr));
+        }
+    }
+    EndEnumPins
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 bool CDirectVobSubFilter::Open()

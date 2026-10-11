@@ -205,6 +205,7 @@ class CDirectVobSubFilter2 : public CDirectVobSubFilter
     bool IsAppBlackListed();
 	bool ShouldWeAutoload(IFilterGraph* pGraph);
 	void GetRidOfInternalScriptRenderer();
+	void ConnectFreeSplitterVobSubPins();
 
 public:
     CDirectVobSubFilter2(LPUNKNOWN punk, HRESULT* phr, const GUID& clsid = __uuidof(CDirectVobSubFilter2));
@@ -212,5 +213,6 @@ public:
 	HRESULT CheckConnect(PIN_DIRECTION dir, IPin* pPin);
 	STDMETHODIMP JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName);
     HRESULT CheckInputType(const CMediaType* mtIn);
+    HRESULT CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePin);
 };
 
