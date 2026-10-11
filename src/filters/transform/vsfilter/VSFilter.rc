@@ -778,6 +778,7 @@ BEGIN
     IDS_RG_RENDER_TO_ORIGINAL_VIDEO_SIZE "render_to_original_video_size"
     IDS_RG_SUPPORTED_VERSION "supported_version"
     IDS_RG_VERSION          "version"
+    IDS_RV_OPACITY          "opacity"
 #else
     IDS_RG_LOADLEVEL        "LoadLevel"
     IDS_RG_EXTERNALLOAD     "ExtLoad"

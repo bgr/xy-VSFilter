@@ -383,6 +383,7 @@ HRESULT XySubFilter::OnOptionChanged( unsigned field )
     case BOOL_OVERRIDE_PLACEMENT:
     case SIZE_PLACEMENT_PERC:
     case BOOL_FORCE_DEFAULT_STYLE:
+    case INT_VOBSUBSETTINGS_OPACITY:
         m_context_id++;
         UpdateSubtitle(false);
         break;
@@ -1726,6 +1727,7 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
 
             pVSS->SetAlignment(m_xy_bool_opt[BOOL_OVERRIDE_PLACEMENT], m_xy_size_opt[SIZE_PLACEMENT_PERC].cx, m_xy_size_opt[SIZE_PLACEMENT_PERC].cy, 1, 1);
             pVSS->m_fOnlyShowForcedSubs = m_xy_bool_opt[BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS];
+            pVSS->m_opacity = min(max(m_xy_int_opt[INT_VOBSUBSETTINGS_OPACITY], 0), 100);
             m_xy_bool_opt[BOOL_IS_BITMAP] = true;
             m_xy_bool_opt[BOOL_IS_MOVABLE] = true;
         }
@@ -1735,6 +1737,7 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
 
             pVSS->SetAlignment(m_xy_bool_opt[BOOL_OVERRIDE_PLACEMENT], m_xy_size_opt[SIZE_PLACEMENT_PERC].cx, m_xy_size_opt[SIZE_PLACEMENT_PERC].cy, 1, 1);
             pVSS->m_fOnlyShowForcedSubs = m_xy_bool_opt[BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS];
+            pVSS->m_opacity = min(max(m_xy_int_opt[INT_VOBSUBSETTINGS_OPACITY], 0), 100);
             m_xy_bool_opt[BOOL_IS_BITMAP] = true;
             m_xy_bool_opt[BOOL_IS_MOVABLE] = true;
         }
