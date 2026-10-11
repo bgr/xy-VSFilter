@@ -1,3 +1,146 @@
+# FORK CHANGES
+
+This adds support to make bitmap VobSub subtitles semi-transparent.
+
+You'd need to build this into a DLL, register it, and configure your video player to use it.
+Below are instructions based on how I did it for PotPlayer. Only the 64-bit builds have been
+tested.
+
+## Building
+
+You need Visual Studio 2019 or 2022 with the "Desktop development with C++" workload and these
+individual components:
+
+- C++ ATL for latest (v142 or v143) build tools (x86 & x64)
+- C++ MFC for latest (v142 or v143) build tools (x86 & x64)
+
+The build also needs yasm. Download the win64 exe from the
+[latest yasm release](https://github.com/yasm/yasm/releases/latest), rename it to `yasm.exe`, and
+put it in a folder on PATH.
+
+Open 'Developer Command Prompt for VS 2019' (or 2022) in the repository root and build the 64-bit
+VSFilter:
+
+```
+MSBuild VSFilter.sln /m /t:vsfilter /p:Configuration=Release /p:Platform=x64
+```
+
+The DLL is written to `bin\lib_16.0\x64\Release\VSFilter.dll` (VS 2019) or
+`bin\lib_17.0\x64\Release\VSFilter.dll` (VS 2022).
+
+## Installing
+
+Register the DLL from an administrator command prompt:
+
+```
+regsvr32 VSFilter.dll
+```
+
+Use the 64-bit DLL for 64-bit players. The filter keeps the DirectVobSub CLSIDs, so registering
+it replaces any other registered DirectVobSub, for example the one from K-Lite Codec Pack. A
+codec pack update can register its own copy again. Run regsvr32 on this DLL again after such an
+update.
+
+## Setting the opacity
+
+The opacity is a DWORD registry value in percent, from 0 (invisible) to 100 (opaque). The default
+is 100, which draws VobSub subtitles the same way as the original filter. The filter clamps
+values outside 0-100.
+
+```
+HKEY_CURRENT_USER\Software\Gabest\VSFilter\VobSub\Opacity
+```
+
+For example, this sets 65% opacity:
+
+```
+reg add "HKCU\Software\Gabest\VSFilter\VobSub" /v Opacity /t REG_DWORD /d 65 /f
+```
+
+The filter reads the value when it loads, so a new value takes effect the next time you open a
+file. The property pages have no field for it.
+
+## Setting up PotPlayer
+
+PotPlayer renders subtitles itself by default, and its built-in Matroska splitter doesn't pass
+subtitle tracks to DirectVobSub. These steps make PotPlayer use LAV Splitter and the auto-loading
+DirectVobSub. LAV Filters must be installed, for example from K-Lite Codec Pack.
+
+1. Register VSFilter.dll as described in "Installing".
+2. In Preferences > Filter Control > Filter Priority (Overall), click "Add registered filter...",
+   select "DirectVobSub (auto-loading version)", and set its priority to "Prefer".
+3. In the "Source/Splitter" section for "Matroska" dropdown choose "*LAV Splitter Source". If it
+   doesn't exist click "Filter Management" button and if the "DirectShow Filter List" on the left
+   is empty click "Scan" and OK, then you should have it in the dropdown.
+4. Open an MKV file with VobSub tracks. There should be a green arrow icon in the system tray
+   when the file is playing. Right click on that icon brings up its menu, which should also show
+   a list of subtitles.
+
+The system tray menu lists more than one group of tracks. The first group is the splitter's own
+track list. Keep PotPlayer's subtitles on (Alt+H toggles them), because PotPlayer renders the
+subtitle formats other than VobSub. Internally there's a concept of inputs, outputs and
+connection pins. The auto-loading DirectVobSub connects the free VobSub output pins of a known
+splitter, such as LAV Splitter, to its own subtitle inputs. Players with a built-in subtitle
+renderer leave these pins unconnected, and then the embedded VobSub tracks don't reach the
+filter. The filter doesn't touch pins that the player already uses. It doesn't connect pins of
+other subtitle formats, such as SRT, so the player renders them with its own style.
+
+What works in PotPlayer with this setup:
+
+- VobSub tracks inside MKV files work, they're semi-transparent.
+- SRT tracks inside MKV files work, PotPlayer renders them with its own style, which you can
+  configure to be nicely semi-transparent with opaque outline
+- External .idx/.sub files next to the video file - you get double subtitles rendered over
+  each other, just use Alt-H to hide PotPlayer's.
+
+## What about XySubFilter.dll?
+
+This repo can build two different things, DirecVobSub (VSFilter.dll) and XySubFilter
+(XySubFilter.dll). They're build from shared code but the way they integrate with video players
+is completely different as far as I understand it. I tried getting both of them to work for
+completeness sake, but XySubFilter turned out worse than DirectVobSub (VSFilter.dll). In
+PotPlayer, from my quick testing, XySubFilter is less usable for MKV files:
+
+* installed madVR (in madVR's folder ran install.bat as administrator)
+* built XySubFilter like VSFilter, with the `xy_sub_filter` target instead of `vsfilter`
+* copied bin\lib_16.0\x64\Release\XySubFilter.dll to _install
+* registered XySubFilter `regsvr32 ...\xy-VSFilter\_install\XySubFilter.dll`
+* set its opacity registry value (full path below)
+* set up PotPlayer to use this path instead of DirectVobSub:
+   - set "Video Renderer" to madVR ("Madshi Video Renderer"), note that this
+     option is present even if madVR isn't installed and it won't do anything,
+     to confirm it works look for a madVR icon in the system tray while a video
+     plays
+   - in "Filter Priority (Overall)" added XySubFilterAutoLoader with "Prefer",
+     blocked "DirectVobSub (auto-loading version)"
+   - opened a MKV with extracted .idx/.sub next to it. I extracted them with
+     MKVToolNix: `mkvmerge -i movie.mkv` lists the tracks, and
+     `mkvextract movie.mkv tracks "2:movie.idx"` writes VobSub track 2 to
+     movie.idx and movie.sub
+   - two tray icons appear, green arrow with 'XySubFilter' tooltip, and madVR
+
+What I noticed:
+
+* VobSub tracks inside MKV files don't work. XySubFilter doesn't load at all, and PotPlayer
+  renders the tracks itself, opaque.
+* External .idx/.sub files next to the video work, XySubFilter draws them semi-transparent. As
+  with VSFilter, PotPlayer draws its own opaque copy over it.
+
+I'm leaving this in since I already tried it, but I'll be using the DirectVobSub method.
+
+Using XySubFilter.dll needs setting its own registry key:
+
+```
+HKEY_CURRENT_USER\Software\Gabest\XySubFilter\VobSub\opacity
+```
+
+Build it the same way, with `/t:xy_sub_filter` instead of `/t:vsfilter`.
+
+
+Original README below:
+
+---
+
 # xy-VSFilter (pfmod) v3.2.0.810 (20240123)
 https://github.com/pinterf/xy-VSFilter/
 
